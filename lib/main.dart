@@ -5,8 +5,10 @@ import 'package:path/path.dart' as p;
 import 'package:flutter/foundation.dart' show kIsWeb;
 import 'dart:io' show Platform;
 
-import 'package:sqflite_common_ffi/sqflite_ffi.dart' show sqfliteFfiInit, databaseFactoryFfi;
-import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart' show databaseFactoryFfiWeb;
+import 'package:sqflite_common_ffi/sqflite_ffi.dart'
+    show sqfliteFfiInit, databaseFactoryFfi;
+import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart'
+    show databaseFactoryFfiWeb;
 
 // ---------------------------
 // 1) MODELO
@@ -27,10 +29,7 @@ class Pessoa {
   }
 
   Map<String, dynamic> toMap() {
-    final map = <String, dynamic>{
-      'nome': nome,
-      'idade': idade,
-    };
+    final map = <String, dynamic>{'nome': nome, 'idade': idade};
     if (id != null) map['id'] = id; // só inclui se existir
     return map;
   }
@@ -65,48 +64,50 @@ class DatabaseHelper {
     return _db!;
   }
 
-Future<Database> _initDB() async {
-  Future<void> _onCreate(Database db, int version) async {
-    await db.execute('''
+  Future<Database> _initDB() async {
+    Future<void> _onCreate(Database db, int version) async {
+      await db.execute('''
       CREATE TABLE $_table(
         id INTEGER PRIMARY KEY AUTOINCREMENT,
         nome TEXT NOT NULL,
         idade INTEGER NOT NULL
       )
     ''');
-  }
+    }
 
-  if (kIsWeb) {
-    // Web: usar apenas o NOME do banco (IndexedDB). Sem paths.
-    return await databaseFactory.openDatabase(
-      _dbName, // ex.: "meu_banco.db"
-      options: OpenDatabaseOptions(
-        version: 1,
-        onCreate: _onCreate,
-      ),
-    );
-  } else {
-    // Android/iOS/desktop: usar caminho em getDatabasesPath()
-    final dbDir = await getDatabasesPath();
-    final path = p.join(dbDir, _dbName);
-    return await openDatabase(
-      path,
-      version: 1,
-      onCreate: _onCreate,
-    );
+    if (kIsWeb) {
+      // Web: usar apenas o NOME do banco (IndexedDB). Sem paths.
+      return await databaseFactory.openDatabase(
+        _dbName, // ex.: "meu_banco.db"
+        options: OpenDatabaseOptions(version: 1, onCreate: _onCreate),
+      );
+    } else {
+      // Android/iOS/desktop: usar caminho em getDatabasesPath()
+      final dbDir = await getDatabasesPath();
+      final path = p.join(dbDir, _dbName);
+      return await openDatabase(path, version: 1, onCreate: _onCreate);
+    }
   }
-}
 
   // CREATE
   Future<int> insert(Pessoa p) async {
     final db = await database;
-    return db.insert(_table, p.toMap(), conflictAlgorithm: ConflictAlgorithm.abort);
+    return db.insert(
+      _table,
+      p.toMap(),
+      conflictAlgorithm: ConflictAlgorithm.abort,
+    );
   }
 
   // READ by id
   Future<Pessoa?> getById(int id) async {
     final db = await database;
-    final result = await db.query(_table, where: 'id = ?', whereArgs: [id], limit: 1);
+    final result = await db.query(
+      _table,
+      where: 'id = ?',
+      whereArgs: [id],
+      limit: 1,
+    );
     if (result.isEmpty) return null;
     return Pessoa.fromMap(result.first);
   }
@@ -145,7 +146,7 @@ void main() async {
     sqfliteFfiInit();
     databaseFactory = databaseFactoryFfi;
   }
-  
+
   runApp(const PessoasApp());
 }
 
@@ -180,7 +181,7 @@ class _PessoasPageState extends State<PessoasPage> {
   int? _editingId; // se != null, estamos editando
   late Future<List<Pessoa>> _futurePessoas;
   bool _isSaving = false;
-  int _reloadTick = 0; // <--- NOVO  
+  int _reloadTick = 0; // <--- NOVO
 
   @override
   void initState() {
@@ -216,7 +217,7 @@ class _PessoasPageState extends State<PessoasPage> {
   }
 
   Future<void> _salvar() async {
-    if (_isSaving) return;             // evita duplo clique / enter+clique
+    if (_isSaving) return; // evita duplo clique / enter+clique
     if (!(_formKey.currentState?.validate() ?? false)) return;
 
     setState(() => _isSaving = true);
@@ -227,27 +228,27 @@ class _PessoasPageState extends State<PessoasPage> {
       if (_editingId == null) {
         await DatabaseHelper.instance.insert(Pessoa(nome: nome, idade: idade));
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pessoa adicionada!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Pessoa adicionada!')));
       } else {
         await DatabaseHelper.instance.update(
           Pessoa(id: _editingId, nome: nome, idade: idade),
         );
         if (!mounted) return;
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(content: Text('Pessoa atualizada!')),
-        );
+        ScaffoldMessenger.of(
+          context,
+        ).showSnackBar(const SnackBar(content: Text('Pessoa atualizada!')));
       }
 
       _limparFormulario();
       // deixa a UI respirar, e o FutureBuilder atualiza assim que o Future completar
-      _refresh();                   // dispara o FutureBuilder atualizar
+      _refresh(); // dispara o FutureBuilder atualizar
     } catch (e) {
       if (!mounted) return;
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Erro ao salvar: $e')),
-      );
+      ScaffoldMessenger.of(
+        context,
+      ).showSnackBar(SnackBar(content: Text('Erro ao salvar: $e')));
     } finally {
       if (mounted) setState(() => _isSaving = false);
     }
@@ -256,9 +257,9 @@ class _PessoasPageState extends State<PessoasPage> {
   Future<void> _apagar(int id) async {
     await DatabaseHelper.instance.delete(id);
     if (!mounted) return;
-    ScaffoldMessenger.of(context).showSnackBar(
-      const SnackBar(content: Text('Pessoa removida.')),
-    );
+    ScaffoldMessenger.of(
+      context,
+    ).showSnackBar(const SnackBar(content: Text('Pessoa removida.')));
     await _refresh();
   }
 
@@ -342,10 +343,18 @@ class _PessoasPageState extends State<PessoasPage> {
                         Expanded(
                           child: ElevatedButton.icon(
                             onPressed: _isSaving ? null : _salvar,
-                            icon: _isSaving ? const SizedBox(
-                              width: 16, height: 16, child: CircularProgressIndicator(strokeWidth: 2),
-                            ) : Icon(isEditing ? Icons.save : Icons.add),
-                            label: Text(isEditing ? 'Salvar alterações' : 'Adicionar'),
+                            icon: _isSaving
+                                ? const SizedBox(
+                                    width: 16,
+                                    height: 16,
+                                    child: CircularProgressIndicator(
+                                      strokeWidth: 2,
+                                    ),
+                                  )
+                                : Icon(isEditing ? Icons.save : Icons.add),
+                            label: Text(
+                              isEditing ? 'Salvar alterações' : 'Adicionar',
+                            ),
                           ),
                         ),
                         const SizedBox(width: 12),
@@ -369,21 +378,27 @@ class _PessoasPageState extends State<PessoasPage> {
             // ---------------------------
             Expanded(
               child: FutureBuilder<List<Pessoa>>(
-                key: ValueKey(_reloadTick), // <- força rebuild quando _reloadTick muda                
+                key: ValueKey(
+                  _reloadTick,
+                ), // <- força rebuild quando _reloadTick muda
                 future: _futurePessoas,
                 builder: (context, snapshot) {
                   if (snapshot.connectionState == ConnectionState.waiting) {
-                    return const Center(child: Padding(
-                      padding: EdgeInsets.all(24),
-                      child: CircularProgressIndicator(),
-                    ));
+                    return const Center(
+                      child: Padding(
+                        padding: EdgeInsets.all(24),
+                        child: CircularProgressIndicator(),
+                      ),
+                    );
                   }
                   if (snapshot.hasError) {
                     return Center(child: Text('Erro: ${snapshot.error}'));
                   }
                   final pessoas = snapshot.data ?? const <Pessoa>[];
                   if (pessoas.isEmpty) {
-                    return const Center(child: Text('Nenhuma pessoa cadastrada.'));
+                    return const Center(
+                      child: Text('Nenhuma pessoa cadastrada.'),
+                    );
                   }
                   return ListView.separated(
                     padding: const EdgeInsets.all(12),
@@ -408,7 +423,8 @@ class _PessoasPageState extends State<PessoasPage> {
                                   content: Text('Deseja remover ${p.nome}?'),
                                   actions: [
                                     TextButton(
-                                      onPressed: () => Navigator.pop(ctx, false),
+                                      onPressed: () =>
+                                          Navigator.pop(ctx, false),
                                       child: const Text('Cancelar'),
                                     ),
                                     TextButton(
