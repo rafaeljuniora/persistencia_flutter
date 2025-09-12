@@ -7,7 +7,7 @@ import 'package:sqflite_common_ffi_web/sqflite_ffi_web.dart'
     show databaseFactoryFfiWeb;
 import 'package:sqflite/sqflite.dart' show databaseFactory;
 
-import 'ui/pessoas_app.dart'; // seu arquivo modularizado
+import 'ui/pessoas_app.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
