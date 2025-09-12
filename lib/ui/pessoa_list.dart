@@ -1,6 +1,5 @@
 import 'package:flutter/material.dart';
 import '../models/pessoa.dart';
-import '../data/database_helper.dart';
 
 class PessoaList extends StatelessWidget {
   final Future<List<Pessoa>> futurePessoas;
