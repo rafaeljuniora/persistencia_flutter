@@ -27,7 +27,6 @@ class _PessoaFormState extends State<PessoaForm> {
   bool _isSaving = false;
   int? _loadedId;
 
-  // Getter para usar o DB correto
   dynamic get db => widget.databaseHelper ?? DatabaseHelper.instance;
 
   @override
@@ -78,7 +77,7 @@ class _PessoaFormState extends State<PessoaForm> {
     _formKey.currentState?.reset();
     _nomeCtrl.clear();
     _idadeCtrl.clear();
-    setState(() {}); // atualiza botões
+    setState(() {});
   }
 
   Future<void> _salvar() async {
