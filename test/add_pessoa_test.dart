@@ -61,13 +61,12 @@ void main() {
 
     await tester.pumpAndSettle();
 
-    // Modifica o nome
     await tester.enterText(find.byType(TextFormField).at(0), 'Maria Alterada');
     await tester.tap(find.text('Salvar alterações'));
     await tester.pumpAndSettle();
 
     final updated = await fakeDb.getById(pessoaId);
     expect(updated!.nome, 'Maria Alterada');
-    expect(updated.idade, 30); // idade não alterada
+    expect(updated.idade, 30); 
   });
 }
