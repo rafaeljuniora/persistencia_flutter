@@ -22,7 +22,7 @@ class DatabaseHelper {
   }
 
   Future<Database> _initDB() async {
-    Future<void> _onCreate(Database db, int version) async {
+    Future<void> onCreate(Database db, int version) async {
       await db.execute('''
         CREATE TABLE $_table(
           id INTEGER PRIMARY KEY AUTOINCREMENT,
@@ -35,12 +35,12 @@ class DatabaseHelper {
     if (kIsWeb) {
       return await databaseFactory.openDatabase(
         _dbName,
-        options: OpenDatabaseOptions(version: 1, onCreate: _onCreate),
+        options: OpenDatabaseOptions(version: 1, onCreate: onCreate),
       );
     } else {
       final dbDir = await getDatabasesPath();
       final path = p.join(dbDir, _dbName);
-      return await openDatabase(path, version: 1, onCreate: _onCreate);
+      return await openDatabase(path, version: 1, onCreate: onCreate);
     }
   }
 

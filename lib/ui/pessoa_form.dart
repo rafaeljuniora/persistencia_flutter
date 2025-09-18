@@ -6,8 +6,15 @@ class PessoaForm extends StatefulWidget {
   final int? editingId;
   final Future<void> Function()? onSaved;
   final VoidCallback? onCancel;
+  final dynamic databaseHelper;
 
-  const PessoaForm({super.key, this.editingId, this.onSaved, this.onCancel});
+  const PessoaForm({
+    super.key,
+    this.editingId,
+    this.onSaved,
+    this.onCancel,
+    this.databaseHelper,
+  });
 
   @override
   State<PessoaForm> createState() => _PessoaFormState();
@@ -19,6 +26,8 @@ class _PessoaFormState extends State<PessoaForm> {
   final _idadeCtrl = TextEditingController();
   bool _isSaving = false;
   int? _loadedId;
+
+  dynamic get db => widget.databaseHelper ?? DatabaseHelper.instance;
 
   @override
   void initState() {
@@ -50,7 +59,7 @@ class _PessoaFormState extends State<PessoaForm> {
 
     if (_loadedId != null && _loadedId == id) return;
 
-    final p = await DatabaseHelper.instance.getById(id);
+    final p = await db.getById(id);
     if (!mounted) return;
     if (p == null) {
       _clearForm();
@@ -68,7 +77,7 @@ class _PessoaFormState extends State<PessoaForm> {
     _formKey.currentState?.reset();
     _nomeCtrl.clear();
     _idadeCtrl.clear();
-    setState(() {}); // atualiza botões
+    setState(() {});
   }
 
   Future<void> _salvar() async {
@@ -81,15 +90,13 @@ class _PessoaFormState extends State<PessoaForm> {
       final idade = int.parse(_idadeCtrl.text.trim());
 
       if (widget.editingId == null) {
-        await DatabaseHelper.instance.insert(Pessoa(nome: nome, idade: idade));
+        await db.insert(Pessoa(nome: nome, idade: idade));
         if (!mounted) return;
         ScaffoldMessenger.of(
           context,
         ).showSnackBar(const SnackBar(content: Text('Pessoa adicionada!')));
       } else {
-        await DatabaseHelper.instance.update(
-          Pessoa(id: widget.editingId, nome: nome, idade: idade),
-        );
+        await db.update(Pessoa(id: widget.editingId, nome: nome, idade: idade));
         if (!mounted) return;
         ScaffoldMessenger.of(
           context,
