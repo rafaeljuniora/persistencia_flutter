@@ -3,15 +3,32 @@ import '../models/pessoa.dart';
 import '../domain/stores/pessoa_store.dart';
 import '../di/injection.dart';
 
-class PessoaList extends StatelessWidget {
+class PessoaList extends StatefulWidget {
   final void Function(Pessoa) onEdit;
 
   const PessoaList({super.key, required this.onEdit});
 
   @override
-  Widget build(BuildContext context) {
-    final store = getIt<PessoaStore>();
+  State<PessoaList> createState() => _PessoaListState();
+}
 
+class _PessoaListState extends State<PessoaList> {
+  final store = getIt<PessoaStore>();
+
+  @override
+  void initState() {
+    super.initState();
+    store.carregar();
+  }
+
+  @override
+  void reassemble() {
+    super.reassemble();
+    store.carregar();
+  }
+
+  @override
+  Widget build(BuildContext context) {
     return AnimatedBuilder(
       animation: store,
       builder: (context, _) {
@@ -66,11 +83,11 @@ class PessoaList extends StatelessWidget {
                 tileColor: Colors.grey.withOpacity(0.06),
                 title: Text('${p.nome} (${p.idade})'),
                 subtitle: Text('ID: ${p.id ?? '-'}'),
-                onTap: () => onEdit(p),
+                onTap: () => widget.onEdit(p),
                 trailing: IconButton(
                   tooltip: 'Editar',
                   icon: const Icon(Icons.edit),
-                  onPressed: () => onEdit(p),
+                  onPressed: () => widget.onEdit(p),
                 ),
               ),
             );
