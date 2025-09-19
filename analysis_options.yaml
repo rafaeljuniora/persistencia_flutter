@@ -26,3 +26,18 @@ linter:
 
 # Additional information about this file can be found at
 # https://dart.dev/guides/language/analysis-options
+
+
+dart_code_metrics:
+  metrics:
+    cyclomatic-complexity: 10
+    lines-of-code: 80
+    maximum-nesting-level: 5
+  rules:
+    - prefer-trailing-comma
+    - no-equal-then-else
+    - prefer-const-constructors
+    - avoid-duplicate-exports
+    - avoid-long-functions
+    - avoid-god-class
+

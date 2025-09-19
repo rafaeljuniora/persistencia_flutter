@@ -1,20 +1,14 @@
 import 'package:flutter/material.dart';
 import '../models/pessoa.dart';
-import '../data/database_helper.dart';
+import '../domain/stores/pessoa_store.dart';
+import '../di/injection.dart';
 
 class PessoaForm extends StatefulWidget {
   final int? editingId;
-  final Future<void> Function()? onSaved;
+  final VoidCallback? onSaved;
   final VoidCallback? onCancel;
-  final dynamic databaseHelper;
 
-  const PessoaForm({
-    super.key,
-    this.editingId,
-    this.onSaved,
-    this.onCancel,
-    this.databaseHelper,
-  });
+  const PessoaForm({super.key, this.editingId, this.onSaved, this.onCancel});
 
   @override
   State<PessoaForm> createState() => _PessoaFormState();
@@ -27,11 +21,12 @@ class _PessoaFormState extends State<PessoaForm> {
   bool _isSaving = false;
   int? _loadedId;
 
-  dynamic get db => widget.databaseHelper ?? DatabaseHelper.instance;
+  late final PessoaStore store;
 
   @override
   void initState() {
     super.initState();
+    store = getIt<PessoaStore>();
     _maybeLoadEditing();
   }
 
@@ -50,6 +45,14 @@ class _PessoaFormState extends State<PessoaForm> {
     super.dispose();
   }
 
+  void _clearForm() {
+    _loadedId = null;
+    _formKey.currentState?.reset();
+    _nomeCtrl.clear();
+    _idadeCtrl.clear();
+    setState(() {});
+  }
+
   Future<void> _maybeLoadEditing() async {
     final id = widget.editingId;
     if (id == null) {
@@ -57,27 +60,21 @@ class _PessoaFormState extends State<PessoaForm> {
       return;
     }
 
-    if (_loadedId != null && _loadedId == id) return;
+    final p = store.lista.firstWhere(
+      (p) => p.id == id,
+      orElse: () => Pessoa(id: null, nome: '', idade: 0),
+    );
 
-    final p = await db.getById(id);
-    if (!mounted) return;
-    if (p == null) {
+    if (p.id == null) {
       _clearForm();
       return;
     }
+
     setState(() {
       _loadedId = p.id;
       _nomeCtrl.text = p.nome;
       _idadeCtrl.text = p.idade.toString();
     });
-  }
-
-  void _clearForm() {
-    _loadedId = null;
-    _formKey.currentState?.reset();
-    _nomeCtrl.clear();
-    _idadeCtrl.clear();
-    setState(() {});
   }
 
   Future<void> _salvar() async {
@@ -89,24 +86,20 @@ class _PessoaFormState extends State<PessoaForm> {
       final nome = _nomeCtrl.text.trim();
       final idade = int.parse(_idadeCtrl.text.trim());
 
-      if (widget.editingId == null) {
-        await db.insert(Pessoa(nome: nome, idade: idade));
-        if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Pessoa adicionada!')));
-      } else {
-        await db.update(Pessoa(id: widget.editingId, nome: nome, idade: idade));
-        if (!mounted) return;
-        ScaffoldMessenger.of(
-          context,
-        ).showSnackBar(const SnackBar(content: Text('Pessoa atualizada!')));
-      }
+      final pessoa = Pessoa(id: _loadedId, nome: nome, idade: idade);
+      await store.salvar(pessoa);
+
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text(
+            _loadedId == null ? 'Pessoa adicionada!' : 'Pessoa atualizada!',
+          ),
+        ),
+      );
 
       _clearForm();
-      await widget.onSaved?.call();
+      widget.onSaved?.call();
     } catch (e) {
-      if (!mounted) return;
       ScaffoldMessenger.of(
         context,
       ).showSnackBar(SnackBar(content: Text('Erro ao salvar: $e')));

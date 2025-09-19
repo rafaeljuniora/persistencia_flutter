@@ -1,37 +1,21 @@
 import 'package:flutter/material.dart';
 import '../models/pessoa.dart';
+import '../domain/stores/pessoa_store.dart';
+import '../di/injection.dart';
 
 class PessoaList extends StatelessWidget {
-  final Future<List<Pessoa>> futurePessoas;
   final void Function(Pessoa) onEdit;
-  final Future<void> Function(int) onDelete;
 
-  const PessoaList({
-    super.key,
-    required this.futurePessoas,
-    required this.onEdit,
-    required this.onDelete,
-  });
+  const PessoaList({super.key, required this.onEdit});
 
   @override
   Widget build(BuildContext context) {
-    return FutureBuilder<List<Pessoa>>(
-      future: futurePessoas,
-      builder: (context, snapshot) {
-        if (snapshot.connectionState == ConnectionState.waiting) {
-          return const Center(
-            child: Padding(
-              padding: EdgeInsets.all(24),
-              child: CircularProgressIndicator(),
-            ),
-          );
-        }
+    final store = getIt<PessoaStore>();
 
-        if (snapshot.hasError) {
-          return Center(child: Text('Erro: ${snapshot.error}'));
-        }
-
-        final pessoas = snapshot.data ?? const <Pessoa>[];
+    return AnimatedBuilder(
+      animation: store,
+      builder: (context, _) {
+        final pessoas = store.lista;
         if (pessoas.isEmpty) {
           return const Center(child: Text('Nenhuma pessoa cadastrada.'));
         }
@@ -72,7 +56,7 @@ class PessoaList extends StatelessWidget {
                     false;
               },
               onDismissed: (_) async {
-                await onDelete(p.id!);
+                await store.remover(p.id!);
                 if (!context.mounted) return;
                 ScaffoldMessenger.of(context).showSnackBar(
                   const SnackBar(content: Text('Pessoa removida.')),

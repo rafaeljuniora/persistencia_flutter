@@ -1,7 +1,7 @@
-import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
-import 'package:exemplo/ui/pessoa_form.dart';
+import 'package:flutter/material.dart';
 import 'fakes/fake_database_helper.dart';
+import '../testaaa/fakes/pessoa_form_wrapper.dart';
 import 'package:exemplo/models/pessoa.dart';
 
 void main() {
@@ -14,7 +14,7 @@ void main() {
   testWidgets('Adicionar nova pessoa', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(body: PessoaForm(databaseHelper: fakeDb)),
+        home: Scaffold(body: PessoaFormWrapper(fakeDb: fakeDb)),
       ),
     );
 
@@ -24,16 +24,15 @@ void main() {
     await tester.tap(find.text('Adicionar'));
     await tester.pumpAndSettle();
 
-    final pessoas = await fakeDb.getAll();
-    expect(pessoas.length, 1);
-    expect(pessoas.first.nome, 'João');
-    expect(pessoas.first.idade, 25);
+    expect(fakeDb.lista.length, 1);
+    expect(fakeDb.lista.first.nome, 'João');
+    expect(fakeDb.lista.first.idade, 25);
   });
 
   testWidgets('Validação do formulário', (tester) async {
     await tester.pumpWidget(
       MaterialApp(
-        home: Scaffold(body: PessoaForm(databaseHelper: fakeDb)),
+        home: Scaffold(body: PessoaFormWrapper(fakeDb: fakeDb)),
       ),
     );
 
@@ -48,13 +47,12 @@ void main() {
     final p = Pessoa(nome: 'Maria', idade: 30);
     await fakeDb.insert(p);
 
-    final pessoas = await fakeDb.getAll();
-    final pessoaId = pessoas.first.id!;
+    final pessoaId = fakeDb.lista.first.id!;
 
     await tester.pumpWidget(
       MaterialApp(
         home: Scaffold(
-          body: PessoaForm(databaseHelper: fakeDb, editingId: pessoaId),
+          body: PessoaFormWrapper(fakeDb: fakeDb, editingId: pessoaId),
         ),
       ),
     );
@@ -67,6 +65,6 @@ void main() {
 
     final updated = await fakeDb.getById(pessoaId);
     expect(updated!.nome, 'Maria Alterada');
-    expect(updated.idade, 30); 
+    expect(updated.idade, 30);
   });
 }
