@@ -1,6 +1,6 @@
 import 'package:flutter/foundation.dart';
-import '/models/pessoa.dart';
-import '/domain/repositories/pessoa_repository.dart';
+import '../../models/pessoa.dart';
+import '../repositories/pessoa_repository.dart';
 
 class PessoaStore extends ChangeNotifier {
   final PessoaRepository repository;
